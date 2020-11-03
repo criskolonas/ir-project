@@ -4,6 +4,10 @@ import re
 
 
 class Crawler:
+
+
+
+    #Constructor
     def __init__(self, url, n, threads, warm_start, algo):
         self.url = url
         self.n = n
@@ -11,24 +15,35 @@ class Crawler:
         self.warm_start = warm_start
         self.algo = algo
 
-    def crawl(self):
+    def initializeCrawl(self):
+
+        if not self.warm_start:
+            self.visited.clear();
+
         with urllib.request.urlopen(self.url) as response:
             html = response.read().decode('utf-8')
             links = self.findLinks(html)
-            print(*links, sep="\n")
+        print(*links,sep = '\n')
+        self.visited.append(self.url)
+        self.queue.append(self.url)
 
         if self.algo == 'BFS':
-            self.runBFS();
+            self.crawlBFS(links);
 
         if self.algo == 'DFS':
-            self.runDFS();
+            self.crawlDFS(links);
 
-    def runBFS(self):
+    #Crawling using Breadth First Search of links
+    def crawlBFS(self, links):
+        for link in links[0:self.n+1]:
+            pass
+
+    #Crawling using Depth First Search of links
+    def crawlDFS(self, links):
         pass
 
-    def runDFS(self):
-        pass
-
+    #Using regular expression to find all links in a single link's source file.
     def findLinks(self, link):
-        pattern = re.compile(r'href=[\'"]?([^\'" >]+)')  #regex for href=
+        pattern = re.compile('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+')  #regex for href=
         return re.findall(pattern, link)
+
