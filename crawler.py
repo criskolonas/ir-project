@@ -1,12 +1,13 @@
 import urllib.request
 import urllib.response
 import re
-
+from bs4 import BeautifulSoup
 
 class Crawler:
 
-    visited = []
     queue = []
+    visited = []
+
 
     #Constructor
     def __init__(self, url, n, threads, warm_start, algo):
@@ -22,6 +23,7 @@ class Crawler:
         
         links = self.generateUrl(self.url)
         self.visited.append(self.url)
+        self.parseHTML(self.url)
         for link in links:
             self.queue.append(link)
 
@@ -31,8 +33,9 @@ class Crawler:
         if self.algo == 'DFS':
             self.crawlDFS(self.queue)
 
-        print("Visited links:")
         print(self.visited)
+        print(self.queue)
+
 
     #Crawling using Breadth First Search of links
     def crawlBFS(self, queue):
@@ -50,9 +53,12 @@ class Crawler:
             if len(self.visited) >= self.n:
                 break
             self.visited.append(url)
+            self.parseHTML(url)
+
+
             links = self.generateUrl(url)
             for link in links:
-                queue.insert(0,link)
+                queue.insert(0, link)
 
     #Using regular expression to find all links in a single link's source file.
     def findLinks(self, link):
@@ -66,3 +72,10 @@ class Crawler:
             links = self.findLinks(html)
         return links
 
+    def parseHTML(self, link):
+        with urllib.request.urlopen(link) as response:
+            linkHTML = BeautifulSoup(response, 'html.parser')
+            try:
+                print(linkHTML.html.title)
+            except AttributeError:
+                print(link)
