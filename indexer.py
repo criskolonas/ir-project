@@ -1,15 +1,21 @@
 from bs4 import BeautifulSoup
+import re
 
 
 class Indexer:
     inverted_index = []
 
-    def __init__(self, documents):
-        self.documents = documents  # 2d array with document id and string of document's text
+    def string_cleanup(self,doc):
+        doc_lowercase = doc.lower()
+        doc_no_punctuation = s = re.sub(r'[^\w\s]', '', doc_lowercase)
+        return doc_no_punctuation
 
     def create_word_dictionary(self, documents):
         dictionary = list()
         for doc in documents:
-            dictionary.append(doc.split())
+            doc = self.string_cleanup(doc)
+            doc_words = doc.split()
+            for word in doc_words:
+                dictionary.append(word)
         dictionary = list(set(dictionary))
-        return dictionary
+        print(dictionary)
