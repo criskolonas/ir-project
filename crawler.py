@@ -38,6 +38,7 @@ class Crawler:
         if self.warm_start:
             self.visited.clear()
             self.queue.clear()
+            self.soups.clear()
         self.queue = self.getLinks(self.url)
         # th = threading.Thread(self.crawl(self.queue[0]))
         # th.start()
