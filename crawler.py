@@ -1,8 +1,22 @@
-from urllib import request
+import requests
 from bs4 import BeautifulSoup
-from concurrent.futures import ThreadPoolExecutor
 import re
 import time
+# NON THREADED VERSION
+# import threading
+# from concurrent.futures import ThreadPoolExecutor
+
+
+# Method to find link format using regex and to delete the duplicate links
+# Returns clean links
+def remove_duplicates(links):
+    links_clean = []
+    for link in links:
+        match = re.search("(?P<url>https?://[^\s]+)", link)
+        if match is not None:
+            links_clean.append((match.group("url")))
+        links_clean = list(dict.fromkeys(links_clean))
+    return links_clean
 
 
 class Crawler:
@@ -21,46 +35,58 @@ class Crawler:
     # Crawler initializer
     def initializeCrawl(self):
         t1 = time.perf_counter()
-        if not self.warm_start:
+        if self.warm_start:
             self.visited.clear()
             self.queue.clear()
-
-        self.visited.append(self.url)
         self.queue = self.getLinks(self.url)
-
-        with ThreadPoolExecutor(max_workers=self.threads) as executor:
-            executor.map(self.crawlStart, self.queue)
+        # th = threading.Thread(self.crawl(self.queue[0]))
+        # th.start()
+        self.crawl(self.queue[0])
+        print(len(self.soups))
+        print(len(self.visited) == self.n)
         t2 = time.perf_counter()
-        print(t2 - t1)
-        print(len(self.visited))
+        print("Time Elapsed: " + str(t2 - t1))
 
-    # Method to generate links from given url and create "soup" objects for each link
-    def getLinks(self, url):
-        with request.urlopen(url) as response:
-            try:
-                html = response.read().decode('utf-8')
-                soup = BeautifulSoup(html,"html.parser")
-                self.soups.append(soup.prettify())
-                pattern = re.compile(
-                    'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+')
-                links = re.findall(pattern, html)
-                links_clean = list(dict.fromkeys(links))
-                return links_clean
-            except Exception as exc:
-                print(exc)
-
-    # Crawling using Selected Algorithm
-    def crawlStart(self, url):
+    # Crawl method
+    def crawl(self, url):
         if len(self.visited) >= self.n:
-            return 0
+            return
         if url in self.visited:
             self.queue.pop(0)
+            self.crawl(self.queue[0])
         else:
             self.visited.append(url)
             links = self.getLinks(url)
-            if self.algo == "DFS":
-                for link in links:
-                    self.queue.insert(0, link)
-            elif self.algo == "BFS":
-                for link in links:
-                    self.queue.append(link)
+            if links is None:
+                self.queue.pop(0)
+                self.crawl(self.queue[0])
+            else:
+                if self.algo == "DFS":
+                    for link in links:
+                        self.queue.insert(0, link)
+                elif self.algo == "BFS":
+                    for link in links:
+                        self.queue.append(link)
+                self.crawl(self.queue[0])
+
+    # Method to get all links from given url
+    def getLinks(self, url):
+        links = []
+        try:
+            html = requests.get(url)
+            soup = BeautifulSoup(html.content, 'lxml')
+            self.soups.append(soup)
+            for link in soup.find_all('a', href=True):
+                links.append(link.get("href"))
+            links = remove_duplicates(links)
+            return links
+        except Exception as ex:
+            print(url + ": " + str(ex) + "\n")
+
+    # Test method: Check starting queue of given url:
+    # if len(self.queue) < self.n
+    # Method has input of links and not a url!
+    # def checkQueue(self):
+    #     if len(self.queue) < self.n:
+    #         links = getLinks(self.queue[0])
+    #         self.crawl(links)
