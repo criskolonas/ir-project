@@ -42,8 +42,6 @@ class Crawler:
         # th = threading.Thread(self.crawl(self.queue[0]))
         # th.start()
         self.crawl(self.queue[0])
-        print(len(self.soups))
-        print(len(self.visited) == self.n)
         t2 = time.perf_counter()
         print("Time Elapsed: " + str(t2 - t1))
 
