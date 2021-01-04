@@ -39,7 +39,9 @@ class Crawler:
             self.visited.clear()
             self.queue.clear()
             self.soups.clear()
+
         self.queue = self.getLinks(self.url)
+        self.visited.append(self.url)
         # th = threading.Thread(self.crawl(self.queue[0]))
         # th.start()
         self.crawl(self.queue[0])
@@ -81,11 +83,3 @@ class Crawler:
             return links
         except Exception as ex:
             print(url + ": " + str(ex) + "\n")
-
-    # Test method: Check starting queue of given url:
-    # if len(self.queue) < self.n
-    # Method has input of links and not a url!
-    # def checkQueue(self):
-    #     if len(self.queue) < self.n:
-    #         links = getLinks(self.queue[0])
-    #         self.crawl(links)
