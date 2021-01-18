@@ -2,6 +2,10 @@ import requests
 from bs4 import BeautifulSoup
 import re
 import time
+from pathlib import Path
+import pathlib
+
+
 # NON THREADED VERSION
 # import threading
 # from concurrent.futures import ThreadPoolExecutor
@@ -36,6 +40,7 @@ class Crawler:
     def initializeCrawl(self):
         t1 = time.perf_counter()
         if self.warm_start:
+            visited_txt = open("visited.txt","w").close()
             self.visited.clear()
             self.queue.clear()
             self.soups.clear()
@@ -83,3 +88,18 @@ class Crawler:
             return links
         except Exception as ex:
             print(url + ": " + str(ex) + "\n")
+
+    def write_file(self):
+        # if dont exist creates and appends too
+        visited_txt = open("visited.txt", "a+")
+        for link in self.visited:
+            visited_txt.write(link + "\n")
+        visited_txt.close()
+
+    def check_if_link_in_file(self,link):
+        with open("visited.txt") as visited_txt:
+            lines = [line.rstrip() for line in visited_txt]
+            for line in lines:
+                if link == line:
+                    return True
+        return False
