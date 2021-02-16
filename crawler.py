@@ -2,6 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 import re
 import time
+from document import Document
 from pathlib import Path
 import pathlib
 
@@ -22,11 +23,27 @@ def remove_duplicates(links):
         links_clean = list(dict.fromkeys(links_clean))
     return links_clean
 
+# Attribute remover from soup object
+def remove_attrs(soup):
+    for tag in soup.findAll(True):
+        tag.attrs = None
+    return soup
+
+
+def check_if_link_in_file(link):
+    with open("visited.txt") as visited_txt:
+        lines = [line.rstrip() for line in visited_txt]
+        for line in lines:
+            if link == line:
+                return True
+    return False
+
 
 class Crawler:
     queue = []
     visited = []
     soups = []
+    texts = []
 
     # Constructor
     def __init__(self, url, n, threads, warm_start, algo):
@@ -38,9 +55,11 @@ class Crawler:
 
     # Crawler initializer
     def initializeCrawl(self):
+        documents = []
+
         t1 = time.perf_counter()
         if self.warm_start:
-            visited_txt = open("visited.txt","w").close()
+            visited_txt = open("visited.txt", "w").close()
             self.visited.clear()
             self.queue.clear()
             self.soups.clear()
@@ -50,8 +69,19 @@ class Crawler:
         # th = threading.Thread(self.crawl(self.queue[0]))
         # th.start()
         self.crawl(self.queue[0])
+
+        # Creating document.py objects
+        for i in range(len(self.visited)):
+            doc = Document(self.visited[i], self.texts[i])
+            documents.append(doc)
+
         t2 = time.perf_counter()
         print("Time Elapsed: " + str(t2 - t1))
+
+        # Test print
+        for doc in documents:
+            print(doc.link)
+            print(doc.text)
 
     # Crawl method
     def crawl(self, url):
@@ -80,11 +110,14 @@ class Crawler:
         links = []
         try:
             html = requests.get(url)
-            soup = BeautifulSoup(html.content, 'lxml')
+            soup = BeautifulSoup(html.content, "lxml")
             self.soups.append(soup)
             for link in soup.find_all('a', href=True):
                 links.append(link.get("href"))
             links = remove_duplicates(links)
+            # Making new clean_soup version, no tags
+            clean_soup = remove_attrs(soup)
+            self.texts.append(clean_soup.find_all('p'))
             return links
         except Exception as ex:
             print(url + ": " + str(ex) + "\n")
@@ -95,11 +128,3 @@ class Crawler:
         for link in self.visited:
             visited_txt.write(link + "\n")
         visited_txt.close()
-
-    def check_if_link_in_file(self,link):
-        with open("visited.txt") as visited_txt:
-            lines = [line.rstrip() for line in visited_txt]
-            for line in lines:
-                if link == line:
-                    return True
-        return False
