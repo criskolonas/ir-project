@@ -23,6 +23,7 @@ def remove_duplicates(links):
         links_clean = list(dict.fromkeys(links_clean))
     return links_clean
 
+
 # Attribute remover from soup object
 def remove_attrs(soup):
     for tag in soup.findAll(True):
@@ -44,6 +45,7 @@ class Crawler:
     visited = []
     soups = []
     texts = []
+    documents = []
 
     # Constructor
     def __init__(self, url, n, threads, warm_start, algo):
@@ -55,7 +57,6 @@ class Crawler:
 
     # Crawler initializer
     def initializeCrawl(self):
-        documents = []
 
         t1 = time.perf_counter()
         if self.warm_start:
@@ -73,13 +74,13 @@ class Crawler:
         # Creating document.py objects
         for i in range(len(self.visited)):
             doc = Document(self.visited[i], self.texts[i])
-            documents.append(doc)
+            self.documents.append(doc)
 
         t2 = time.perf_counter()
         print("Time Elapsed: " + str(t2 - t1))
 
         # Test print
-        for doc in documents:
+        for doc in self.documents:
             print(doc.link)
             print(doc.text)
 
