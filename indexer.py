@@ -1,40 +1,34 @@
 import re
-
-
-def string_cleanup(doc):
-    doc_lowercase = doc.lower()
-    doc_no_punctuation = s = re.sub(r'[^\w\s]', '', doc_lowercase)
-    return doc_no_punctuation
-
+from appearance import Appearance
 
 class Indexer:
-    documents = []
-    tokenized_docs = []
+    tokens = []
+    inverted_index = {}
 
-    def __init__(self, soup_objects):
-        self.soup_objects = soup_objects
+    def __init__(self,documents):
+        self.documents = documents
 
-    def extract_text(self):
-        for s_obj in self.soup_objects:
-            s_obj.find_all('p')
-            self.documents.append(s_obj.text)
-
-    def create_indexer(self):
-        inverted_index = {}
-        self.tokenize_documents()
-        for i in range(len(self.tokenized_docs)):
-            for y in range(len(self.tokenized_docs[i])):
-                name = self.tokenized_docs[i][y]
-                inverted_index[name] = {}
-
-        for key in inverted_index.keys():
-            for i in range(len(self.documents)):
-                inverted_index[key]["d" + str(i + 1)] = len(re.findall(key, self.documents[i]))
-
-        return inverted_index
-
-    def tokenize_documents(self):
-        self.extract_text()
+    def clean_text(self):
         for doc in self.documents:
             doc = string_cleanup(doc)
-            self.tokenized_docs.append(doc.split())
+
+    def find_tokens(self):
+        for doc in self.documents:
+            self.tokens.append(doc.split())
+
+    def create_indexer(self):
+        for i in range(len(self.tokens)):
+            for doc in self.documents:
+                self.inverted_index[self.tokens[i]] = list()
+                occur = len(re.findall(self.tokens[i],doc))
+                if(occur>0):
+                    self.inverted_index[self.tokens[i]] = Appearance(doc,occur)
+
+
+
+#does basic cleaning converts to lowercase and removes punctuation
+def string_cleanup(doc):
+    doc_lowercase = doc.lower()
+    doc_no_punctuation  = re.sub(r'[^\w\s]', '', doc_lowercase)
+    return doc_no_punctuation
+
