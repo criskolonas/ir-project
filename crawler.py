@@ -3,8 +3,6 @@ from bs4 import BeautifulSoup
 import re
 import time
 from document import Document
-from pathlib import Path
-import pathlib
 
 
 # NON THREADED VERSION
@@ -43,7 +41,6 @@ def check_if_link_in_file(link):
 class Crawler:
     queue = []
     visited = []
-    soups = []
     texts = []
     documents = []
 
@@ -112,13 +109,12 @@ class Crawler:
         try:
             html = requests.get(url)
             soup = BeautifulSoup(html.content, "lxml")
-            self.soups.append(soup)
             for link in soup.find_all('a', href=True):
                 links.append(link.get("href"))
             links = remove_duplicates(links)
             # Making new clean_soup version, no tags
             clean_soup = remove_attrs(soup)
-            self.texts.append(clean_soup.find_all('p'))
+            self.texts.append(str(clean_soup.find_all('p')))
             return links
         except Exception as ex:
             print(url + ": " + str(ex) + "\n")
