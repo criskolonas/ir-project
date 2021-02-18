@@ -3,11 +3,7 @@ from bs4 import BeautifulSoup
 import re
 import time
 from document import Document
-
-
-# NON THREADED VERSION
-# import threading
-# from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor
 
 
 # Method to find link format using regex and to delete the duplicate links
@@ -22,13 +18,6 @@ def remove_duplicates(links):
     return links_clean
 
 
-# Attribute remover from soup object
-def remove_attrs(soup):
-    for tag in soup.findAll(True):
-        tag.attrs = None
-    return soup
-
-
 def check_if_link_in_file(link):
     with open("visited.txt") as visited_txt:
         lines = [line.rstrip() for line in visited_txt]
@@ -38,10 +27,18 @@ def check_if_link_in_file(link):
     return False
 
 
+def requestUrl(url):
+    try:
+        r = requests.get(url)
+        return r
+    except Exception as ex:
+        print("Exception from " + url + ": " + str(ex))
+        return None
+
+
 class Crawler:
     queue = []
     visited = []
-    texts = []
     documents = []
 
     # Constructor
@@ -52,7 +49,7 @@ class Crawler:
         self.warm_start = warm_start
         self.algo = algo
 
-    # Crawler initializer
+    # Crawler1 initializer
     def initializeCrawl(self):
 
         t1 = time.perf_counter()
@@ -60,26 +57,12 @@ class Crawler:
             visited_txt = open("visited.txt", "w").close()
             self.visited.clear()
             self.queue.clear()
-            self.soups.clear()
 
-        self.queue = self.getLinks(self.url)
-        self.visited.append(self.url)
-        # th = threading.Thread(self.crawl(self.queue[0]))
-        # th.start()
+        self.queue.append(self.url)
         self.crawl(self.queue[0])
-
-        # Creating document.py objects
-        for i in range(len(self.visited)):
-            doc = Document(self.visited[i], self.texts[i])
-            self.documents.append(doc)
-
         t2 = time.perf_counter()
-        print("Time Elapsed: " + str(t2 - t1))
-
-        # Test print
-        for doc in self.documents:
-            print(doc.link)
-            print(doc.text)
+        print("Time Elapsed: " + str(t2 - t1) + "s." + "\n-----------------")
+        print(len(self.visited) == self.n)
 
     # Crawl method
     def crawl(self, url):
@@ -90,38 +73,43 @@ class Crawler:
             self.crawl(self.queue[0])
         else:
             self.visited.append(url)
-            links = self.getLinks(url)
-            if links is None:
-                self.queue.pop(0)
-                self.crawl(self.queue[0])
-            else:
+            # with ThreadPoolExecutor(max_workers=self.threads) as executor:
+            #     print("Creating task!")
+            #     task = executor.submit(requestUrl, url)
+            #     print("Adding callback!")
+            #     task.add_done_callback(self.callbackContinue)
+            #     print("Callback added!")
+            self.callbackContinue(url)
+            self.crawl(self.queue[0])
+
+    def callbackContinue(self, url):
+        try:
+            links = []
+            texts = ''
+            result = requestUrl(url)
+            if result.status_code == 200:
+                soup = BeautifulSoup(result.content, "lxml")
+                for link in soup.find_all('a', href=True):
+                    links.append(link.get("href"))
+                links = remove_duplicates(links)
+                for p in soup.findAll('p'):
+                    texts += p.get_text() + '\n'
+                doc = Document(url, texts)
+                self.documents.append(doc)
                 if self.algo == "DFS":
                     for link in links:
                         self.queue.insert(0, link)
                 elif self.algo == "BFS":
                     for link in links:
                         self.queue.append(link)
-                self.crawl(self.queue[0])
-
-    # Method to get all links from given url
-    def getLinks(self, url):
-        links = []
-        try:
-            html = requests.get(url)
-            soup = BeautifulSoup(html.content, "lxml")
-            for link in soup.find_all('a', href=True):
-                links.append(link.get("href"))
-            links = remove_duplicates(links)
-            # Making new clean_soup version, no tags
-            clean_soup = remove_attrs(soup)
-            self.texts.append(str(clean_soup.find_all('p')))
-            return links
         except Exception as ex:
-            print(url + ": " + str(ex) + "\n")
+            print(url.url + str(ex))
+        except UnicodeEncodeError as er:
+            print(url.url + str(er))
 
-    def write_file(self):
-        # if dont exist creates and appends too
-        visited_txt = open("visited.txt", "a+")
-        for link in self.visited:
-            visited_txt.write(link + "\n")
-        visited_txt.close()
+    # def write_file(self):
+    #     # if dont exist creates and appends too
+    #     visited_txt = open("visited.txt", "a+")
+    #     for link in self.visited:
+    #         visited_txt.write(link + "\n")
+    #     visited_txt.close()
