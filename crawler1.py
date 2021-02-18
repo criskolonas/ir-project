@@ -72,7 +72,6 @@ class Crawler1:
                 self.queue.pop(0)
             else:
                 self.visited.append(url)
-                print(len(self.visited))
                 with ThreadPoolExecutor(max_workers=self.threads) as executor:
                     task = executor.submit(requestUrl, url)
                     task.add_done_callback(self.callbackContinue)
@@ -88,7 +87,7 @@ class Crawler1:
                     links.append(link.get("href"))
                 links = remove_duplicates(links)
                 for p in soup.findAll('p'):
-                    texts += p.get_text() + '\n'
+                    texts += p.text + '\n'
                 doc = Document(url, texts)
                 self.documents.append(doc)
                 if self.algo == "DFS":

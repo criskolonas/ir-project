@@ -93,7 +93,7 @@ class Crawler:
                     links.append(link.get("href"))
                 links = remove_duplicates(links)
                 for p in soup.findAll('p'):
-                    texts += p.get_text() + '\n'
+                    texts += p.text + '\n'
                 doc = Document(url, texts)
                 self.documents.append(doc)
                 if self.algo == "DFS":
