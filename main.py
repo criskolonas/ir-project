@@ -8,7 +8,7 @@ if __name__ == '__main__':
     # r1.initializeCrawl()
     # sleep(5.0)
     # print("THREAD-TIME!")
-    r2 = Crawler1('https://www.in.gr/', 50, 5, False, 'BFS')
+    r2 = Crawler1('https://www.in.gr', 10, 5, True, 'BFS')
     r2.initializeCrawl()
     # documents = []
     # d1 = Document('www.instagram.gr','Python is a 2000 made-for-TV horror movie directed by RichardClabaugh. The film features several cult favorite actors, including William Zabka of The Karate Kid fame, Wil Wheaton, Casper Van Dien, Jenny McCarthy, Keith Coogan, Robert Englund')
@@ -29,10 +29,10 @@ if __name__ == '__main__':
     # for doc in Crawler1.documents:
     #     print(doc.text)
     #     print("-------")
-    # ind = Indexer(Crawler1.documents)
-    # ind.create_indexer()
-    # ind.calculate_scores()
-    # for term in ind.inverted_index.keys():
-    #     print(term)
-    #     for app in ind.inverted_index[term]:
-    #         print(app.score,'\n')
+    ind = Indexer(Crawler1.documents)
+    ind.create_indexer()
+    ind.calculate_scores()
+    for term in ind.inverted_index.keys():
+        print(term)
+        for app in ind.inverted_index[term]:
+            print(app.score,'\n')
