@@ -71,7 +71,6 @@ class Crawler1:
     # Crawl method
     def crawl(self, url):
         while len(self.visited) < (self.n + self.new_size_visited):
-            print("Target url: {}".format(self.url))
             if url in self.visited:
                 self.queue.pop(0)
             else:
