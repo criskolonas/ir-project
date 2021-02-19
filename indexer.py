@@ -30,7 +30,7 @@ class Indexer:
 
         for i in range(len(self.tokens)):
             for doc in self.documents:
-                occur = len(re.findall(self.tokens[i],doc.text))
+                occur = sum(1 for _ in re.finditer(r'\b%s\b' % re.escape(self.tokens[i]), doc.text))
                 self.inverted_index[self.tokens[i]].append(Appearance(doc,occur))
     def calculate_scores(self):
         for term in self.inverted_index.keys():
