@@ -1,5 +1,4 @@
 from crawler import Crawler
-from crawler1 import Crawler1
 from indexer import Indexer
 from document import  Document
 from time import sleep
@@ -8,7 +7,7 @@ if __name__ == '__main__':
     # r1.initializeCrawl()
     # sleep(5.0)
     # print("THREAD-TIME!")
-    r2 = Crawler1('https://www.in.gr', 10, 5, True, 'BFS')
+    r2 = Crawler('https://www.in.gr', 10, 5, True, 'BFS')
     r2.initializeCrawl()
     # documents = []
     # d1 = Document('www.instagram.gr','Python is a 2000 made-for-TV horror movie directed by RichardClabaugh. The film features several cult favorite actors, including William Zabka of The Karate Kid fame, Wil Wheaton, Casper Van Dien, Jenny McCarthy, Keith Coogan, Robert Englund')
