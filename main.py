@@ -28,7 +28,7 @@ if __name__ == '__main__':
     # for doc in Crawler1.documents:
     #     print(doc.text)
     #     print("-------")
-    ind = Indexer(Crawler1.documents)
+    ind = Indexer(Crawler.documents)
     ind.create_indexer()
     ind.calculate_scores()
     for term in ind.inverted_index.keys():
