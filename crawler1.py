@@ -47,7 +47,8 @@ class Crawler1:
     queue = []
     visited = []
     documents = []
-    new_size = 0
+    new_size_visited = 0
+    new_size_queue = 0
 
     # Constructor
     def __init__(self, url, n, threads, warm_start, algo):
@@ -62,31 +63,35 @@ class Crawler1:
         t1 = time.perf_counter()
         self.warmStartCheck()
         self.crawl(self.url)
-        print("pena")
         self.write_file()
         t2 = time.perf_counter()
         print("Time Elapsed: {} s.".format(t2 - t1))
-        print(len(self.visited) == (self.n + self.new_size))
+        print(len(self.visited) == (self.n + self.new_size_visited))
 
     # Crawl method
     def crawl(self, url):
-        while len(self.visited) < (self.n + self.new_size):
+        while len(self.visited) < (self.n + self.new_size_visited):
+            print("Target url: {}".format(self.url))
             if url in self.visited:
                 self.queue.pop(0)
             else:
+                print("Crawling url: {}".format(url))
                 self.visited.append(url)
                 with ThreadPoolExecutor(max_workers=self.threads) as executor:
                     task = executor.submit(requestUrl, url)
                     task.add_done_callback(self.callbackContinue)
-            url = self.queue[0]
+                url = self.queue[0]
 
     def callbackContinue(self, url):
         try:
             result = url.result()
+            soup = BeautifulSoup(result.content, "lxml")
             if result.status_code == 200:
-                soup = BeautifulSoup(result.content, "lxml")
                 doc = Document(url, parseInfo(soup))
                 self.documents.append(doc)
+                self.findLinks(soup)
+                self.queue.pop(0)
+            else:
                 self.findLinks(soup)
                 self.queue.pop(0)
         except Exception as ex:
@@ -109,25 +114,39 @@ class Crawler1:
     def warmStartCheck(self):
         if self.warm_start:
             visited_txt = open("visited.txt", "w").close()
+            queue_txt = open("queue.txt", "w").close()
             self.visited.clear()
             self.queue.clear()
+            print("To be added to the .txt file: +{} links".format(self.n))
         else:
             with open("visited.txt", "r") as visited_txt:
-                txt_links = visited_txt.readlines()
-                if len(txt_links) == 0:
-                    print("File is Empty, thus -False- parameter not allowed\nPlease try again!")
-                    exit(3)
-                for line in txt_links:
-                    line = re.sub("\\n+", "", line)
-                    self.visited.append(line)
-            self.url = self.visited[len(self.visited) - 1]
-            self.visited.pop(len(self.visited) - 1)
-            self.new_size = self.n
+                with open("queue.txt", "r") as queue_txt:
+                    txt_links = visited_txt.readlines()
+                    if len(txt_links) == 0:
+                        print("File is Empty, thus -False- parameter is not allowed.\nPlease try again!")
+                        exit(3)
+                    for line in txt_links:
+                        line = re.sub("\\n+", "", line)
+                        self.visited.append(line)
+                    queue_links = queue_txt.readlines()
+                    if len(queue_links) == 0:
+                        print("Queue is Empty, thus -False- parameter is not allowed.\nPlease try again!")
+                        exit(4)
+                    for line in queue_links:
+                        line = re.sub("\\n+", "", line)
+                        self.queue.append(line)
+            self.url = self.queue[0]
+            self.queue.pop(0)
+            self.new_size_visited = self.n
+            print("To be added to the .txt file: +{} links".format(self.new_size_visited))
 
     def write_file(self):
         # if dont exist creates and appends too
         visited_txt = open("visited.txt", "a+")
-        counter = self.new_size
-        for i in range(len(self.visited) + counter):
-            visited_txt.write(self.visited[i + counter] + "\n")
-        visited_txt.close()
+        queue_txt = open("queue.txt", "a+")
+        counter_visited = self.new_size_visited
+        counter_queue = self.new_size_queue
+        for i in range(counter_visited, len(self.visited)):
+            visited_txt.write(self.visited[i] + "\n")
+        for i in range(counter_queue, len(self.queue)):
+            queue_txt.write(self.queue[i] + "\n")
