@@ -14,7 +14,7 @@ class Indexer:
 
     def clean_text(self):
         for doc in self.documents:
-            doc = string_cleanup(doc)
+            doc.text = string_cleanup(doc)
 
     def find_tokens(self):
         for doc in self.documents:
@@ -24,6 +24,8 @@ class Indexer:
         self.tokens = list(dict.fromkeys(self.tokens))#remove duplicates
     #
     def create_indexer(self):
+        self.clean_text()
+
         self.find_tokens()
         for i in range(len(self.tokens)):
             self.inverted_index[self.tokens[i]] = []
@@ -42,7 +44,7 @@ class Indexer:
 
 #does basic cleaning converts to lowercase and removes punctuation
 def string_cleanup(doc):
-    doc_lowercase = doc.lower()
+    doc_lowercase = doc.text.lower()
     doc_no_punctuation  = re.sub(r'[^\w\s]', '', doc_lowercase)
     return doc_no_punctuation
 
@@ -53,6 +55,8 @@ def tfidf(term, appear,documents):
 
 def tf(appear):
     total_terms = len(appear.doc.text.split())
+    if total_terms <=0:
+        return 0
     return appear.freq / float(total_terms)
 
 
