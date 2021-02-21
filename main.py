@@ -7,21 +7,22 @@ if __name__ == '__main__':
 
     # sleep(5.0)
     # print("THREAD-TIME!")
-    r2 = Crawler('https://www.in.gr', 10, 5, True, 'BFS')
+    r2 = Crawler('https://www.in.gr', 20, 5, True, 'BFS')
     r2.initializeCrawl()
 
     ind = Indexer(Crawler.documents)
 
 
-    query = input("Enter your search query")
+    query = input("Enter your search query:")
     ind.add_document(Document('search_query',query))
-
+    print('Building Indexer...')
     ind.create_indexer()
+    print('Calculating TF-IDFs. May take a while.')
     ind.calculate_scores()
-    for term in ind.inverted_index.keys():
-        print(term)
-        for app in ind.inverted_index[term]:
-            print(app.score, '\n')
 
     qp = QuerryProcessor(ind.inverted_index,len(ind.documents))
-    qp.compare_documents()
+    docs_with_cos_ = qp.compare_documents()
+    docs_with_cos_ = sorted(docs_with_cos_, key=lambda x: x[1], reverse=True)#sorting based on cosine similarity scores
+    print(f'Showing top results based on your query "{query}":')
+    for doc in docs_with_cos_:
+        print(doc[0].link)

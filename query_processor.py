@@ -17,7 +17,7 @@ class QuerryProcessor:
         return dot_product / magnitude
     # calculates the cosine similarity and return a list of top-k documents closest to the given query
     def compare_documents(self):
-        top_k_docs = []
+        top_k_docs = [[0 for x in range(2)] for y in range(self.d_n-1)]
         tfid_query_list = []
         for term in self.inverted_index.keys():
             tfid_query_list.append(self.inverted_index[term][self.d_n-1].score)
@@ -27,4 +27,6 @@ class QuerryProcessor:
             for term in self.inverted_index.keys():
                 tfid_doc_list.append(self.inverted_index[term][i].score)
             doc_vector = np.array(tfid_doc_list)
-            print(self.calculate_cosine_similarity(query_vector,doc_vector))
+            top_k_docs[i-1][0] = self.inverted_index[term][i].doc
+            top_k_docs[i-1][1] = self.calculate_cosine_similarity(query_vector,doc_vector)
+        return  top_k_docs
